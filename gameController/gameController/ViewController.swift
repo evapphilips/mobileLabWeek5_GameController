@@ -18,10 +18,17 @@ enum DirectionCode: String {
     case left = "3"
 }
 
-class ViewController: UIViewController, WebSocketDelegate {
+class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
     
     // Object for managing the web socket.
     var socket: WebSocket?
+    
+    // setup user ID text field
+    var userInput: UITextField!
+    // setup user ID submit button
+    var submit: UIButton!
+    // setup user ID label
+    var userIDLabel: UILabel!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -54,6 +61,25 @@ class ViewController: UIViewController, WebSocketDelegate {
         swipeDown.direction = UISwipeGestureRecognizer.Direction.down
         self.view.addGestureRecognizer(swipeDown)
         
+        // include user ID text field
+        userInput = UITextField(frame: CGRect(x: self.view.frame.width/2 - (2*self.view.frame.width/3)/2 , y: self.view.frame.height/2 - (60/2), width: 2*self.view.frame.width/3, height: 60))
+        userInput.placeholder = "type your player ID"
+        userInput.font = UIFont.systemFont(ofSize: 30)
+        userInput.borderStyle = .roundedRect
+        userInput.returnKeyType = UIReturnKeyType.done
+        userInput.contentVerticalAlignment = UIControl.ContentVerticalAlignment.center
+        userInput.clearButtonMode = UITextField.ViewMode.whileEditing;
+        userInput.delegate = self
+        self.view.addSubview(userInput)
+        
+        // include a submit button
+        submit = UIButton(frame: CGRect(x: self.view.frame.width/2 - (100/2), y: 3*self.view.frame.height/4 - (30/2), width: 100, height: 30))
+        submit.backgroundColor = .gray
+        submit.layer.cornerRadius = 10
+        submit.setTitle("submit", for: .normal)
+        submit.addTarget(self, action: #selector(submitPressed), for: .touchUpInside)
+        self.view.addSubview(submit)
+        
     }
     
     //when a swipe gesture is detected
@@ -72,6 +98,24 @@ class ViewController: UIViewController, WebSocketDelegate {
                 break
             }
         }
+    }
+    
+    // when the submit button is pressed
+    @objc func submitPressed(){
+        // store the current user Input string
+        let userID = userInput.text
+        
+        // hide the text field and the button
+        self.submit.isHidden = true
+        self.userInput.isHidden = true
+        
+        // add and display user id label at the top
+        userIDLabel = UILabel(frame: CGRect(x: 0, y: self.view.frame.height/12, width: self.view.frame.width, height: 60))
+        userIDLabel.text = userID
+        userIDLabel.textAlignment = .center
+        userIDLabel.font = UIFont.systemFont(ofSize: 30)
+        self.view.addSubview(userIDLabel)
+        
     }
     
     // Web Socket Methods
