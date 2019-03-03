@@ -34,9 +34,14 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
     var errorLabelAppeared: Bool! = false
     // setup disconnect button
     var disconnect: UIButton!
+    // setup guide label
+    var guideLabel: UILabel!
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // set background color
+        view.backgroundColor = UIColor(red:0.95, green:0.93, blue:0.93, alpha:1.0)
         
         // Web socket setup
         // URL of the websocket server.
@@ -73,15 +78,26 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
         userInput.contentVerticalAlignment = UIControl.ContentVerticalAlignment.center
         userInput.clearButtonMode = UITextField.ViewMode.whileEditing;
         userInput.delegate = self
+        //userInput.addTarget(self, action: #selector(donePressed), for: .allEditingEvents)
         self.view.addSubview(userInput)
         
         // include a submit button
         submit = UIButton(frame: CGRect(x: self.view.frame.width/2 - (100/2), y: 3*self.view.frame.height/4 - (30/2), width: 100, height: 30))
-        submit.backgroundColor = .gray
+        submit.backgroundColor = .black
         submit.layer.cornerRadius = 10
         submit.setTitle("submit", for: .normal)
         submit.addTarget(self, action: #selector(submitPressed), for: .touchUpInside)
         self.view.addSubview(submit)
+        
+        // include guide label
+        guideLabel = UILabel(frame: CGRect(x: 0, y: self.view.frame.height/2 - (25/2), width: self.view.frame.width, height: 30))
+        guideLabel.text = "Swipe in any direction to move"
+        guideLabel.textAlignment = .center
+        guideLabel.textColor = .gray
+        guideLabel.font = UIFont.systemFont(ofSize: 25)
+        self.view.addSubview(guideLabel)
+        guideLabel.isHidden = true
+        
         
     }
     
@@ -92,19 +108,37 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
             case UISwipeGestureRecognizer.Direction.right:  // swipe right
                 print("Swiped right")
                 setDirectionMessage(.right)
+                view.backgroundColor = UIColor(red:0.62, green:0.71, blue:0.78, alpha:1.0)
+                guideLabel.textColor = .white
+                guideLabel.text = "right"
             case UISwipeGestureRecognizer.Direction.left: // swipe left
                 print("Swiped left")
                 setDirectionMessage(.left)
+                view.backgroundColor = UIColor(red:0.30, green:0.49, blue:0.54, alpha:1.0)
+                guideLabel.textColor = .white
+                guideLabel.text = "left"
             case UISwipeGestureRecognizer.Direction.up: // swipe up
                 print("Swiped Up")
                 setDirectionMessage(.up)
+                view.backgroundColor = UIColor(red:0.53, green:0.91, blue:0.72, alpha:1.0)
+                guideLabel.textColor = .white
+                guideLabel.text = "up"
             case UISwipeGestureRecognizer.Direction.down: // swipe down
                 print("Swiped Down")
                 setDirectionMessage(.down)
+                view.backgroundColor = UIColor(red:0.27, green:0.71, blue:0.61, alpha:1.0)
+                guideLabel.textColor = .white
+                guideLabel.text = "down"
             default:
                 break
             }
         }
+    }
+    
+   // when done is pressed, dismiss the keyboard
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        view.endEditing(true)
+        return false
     }
     
     // when the submit button is pressed
@@ -122,14 +156,14 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
             errorLabel.font = UIFont.systemFont(ofSize: 30)
             self.view.addSubview(errorLabel)
             errorLabelAppeared = true;
-        } else{
+        } else{  // if the user ID was input, continue
+            // hide the intro page
             self.submit.isHidden = true
-            
             self.userInput.isHidden = true
             if(errorLabelAppeared){
                 self.errorLabel.isHidden = true
             }
-            
+    
             // add and display user id label at the top
             userIDLabel = UILabel(frame: CGRect(x: 0, y: self.view.frame.height/12, width: self.view.frame.width, height: 60))
             userIDLabel.text = "Player ID: " + userID!
@@ -139,11 +173,16 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
             
             // add a disconnect button
             disconnect = UIButton(frame: CGRect(x: self.view.frame.width/2 - (200/2), y: self.view.frame.height - self.view.frame.height/12, width: 200, height: 30))
-            disconnect.backgroundColor = .gray
+            disconnect.backgroundColor = .black
             disconnect.layer.cornerRadius = 10
             disconnect.setTitle("leave the game", for: .normal)
             disconnect.addTarget(self, action: #selector(disconnectPressed), for: .touchUpInside)
             self.view.addSubview(disconnect)
+            
+            // show guide label
+            guideLabel.isHidden = false
+            guideLabel.textColor = .gray
+            
             
             // Connect to the web socket
             socket?.connect()
@@ -152,11 +191,28 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
     
     // when the disconnect button is pressed
     @objc func disconnectPressed(){
+        
+        // set background color
+        view.backgroundColor = UIColor(red:0.95, green:0.93, blue:0.93, alpha:1.0)
+        
         // Disconnect from the web socket
         socket?.disconnect()
         
         // re-define the error label
         errorLabelAppeared = false
+        
+        // hide the user ID Label
+        userIDLabel.isHidden = true
+        // hide the disconnect button
+        disconnect.isHidden = true
+        // hide the guide and set it back to the origin value
+        guideLabel.isHidden = true
+        guideLabel.text = "Swipe in any direction to move"
+        // show the submit button
+        submit.isHidden = false
+        // show text field
+        userInput.isHidden = false
+        userInput.text = ""
         
         
     }
@@ -164,7 +220,7 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
     // set direction message
     func setDirectionMessage(_ code: DirectionCode){
         // Get the raw string value from the DirectionCode enum that we created at the top of this program.
-        //sendMessage(code.rawValue)
+        sendMessage(code.rawValue)
         
     }
     
@@ -205,7 +261,7 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
     }
     
     func websocketDidReceiveMessage(socket: WebSocketClient, text: String) {
-        print("socket recieved message", text)
+        // print("socket recieved message", text)
     }
     
     func websocketDidReceiveData(socket: WebSocketClient, data: Data) {
