@@ -29,6 +29,11 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
     var submit: UIButton!
     // setup user ID label
     var userIDLabel: UILabel!
+    // setup error label
+    var errorLabel: UILabel!
+    var errorLabelAppeared: Bool! = false
+    // setup disconnect button
+    var disconnect: UIButton!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,8 +45,6 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
         socket = WebSocket(url: URL(string: urlString)!)
         // Assign WebSocket delegate to self
         socket?.delegate = self
-        // Connect to the web socket
-        socket?.connect()
         
         // Set up swipe gestures
         // swipe right
@@ -88,12 +91,16 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
             switch swipeGesture.direction{
             case UISwipeGestureRecognizer.Direction.right:  // swipe right
                 print("Swiped right")
+                setDirectionMessage(.right)
             case UISwipeGestureRecognizer.Direction.left: // swipe left
                 print("Swiped left")
+                setDirectionMessage(.left)
             case UISwipeGestureRecognizer.Direction.up: // swipe up
                 print("Swiped Up")
+                setDirectionMessage(.up)
             case UISwipeGestureRecognizer.Direction.down: // swipe down
                 print("Swiped Down")
+                setDirectionMessage(.down)
             default:
                 break
             }
@@ -106,17 +113,87 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
         let userID = userInput.text
         
         // hide the text field and the button
-        self.submit.isHidden = true
-        self.userInput.isHidden = true
+        if(userID == ""){ // check if the user ID was input
+            print("not a valid player ID")
+            // add a label that says not a valid user ID
+            errorLabel = UILabel(frame: CGRect(x: 0, y: self.view.frame.height/12, width: self.view.frame.width, height: 60))
+            errorLabel.text = "Not a valid user ID"
+            errorLabel.textAlignment = .center
+            errorLabel.font = UIFont.systemFont(ofSize: 30)
+            self.view.addSubview(errorLabel)
+            errorLabelAppeared = true;
+        } else{
+            self.submit.isHidden = true
+            
+            self.userInput.isHidden = true
+            if(errorLabelAppeared){
+                self.errorLabel.isHidden = true
+            }
+            
+            // add and display user id label at the top
+            userIDLabel = UILabel(frame: CGRect(x: 0, y: self.view.frame.height/12, width: self.view.frame.width, height: 60))
+            userIDLabel.text = "Player ID: " + userID!
+            userIDLabel.textAlignment = .center
+            userIDLabel.font = UIFont.systemFont(ofSize: 30)
+            self.view.addSubview(userIDLabel)
+            
+            // add a disconnect button
+            disconnect = UIButton(frame: CGRect(x: self.view.frame.width/2 - (200/2), y: self.view.frame.height - self.view.frame.height/12, width: 200, height: 30))
+            disconnect.backgroundColor = .gray
+            disconnect.layer.cornerRadius = 10
+            disconnect.setTitle("leave the game", for: .normal)
+            disconnect.addTarget(self, action: #selector(disconnectPressed), for: .touchUpInside)
+            self.view.addSubview(disconnect)
+            
+            // Connect to the web socket
+            socket?.connect()
+        }
+    }
+    
+    // when the disconnect button is pressed
+    @objc func disconnectPressed(){
+        // Disconnect from the web socket
+        socket?.disconnect()
         
-        // add and display user id label at the top
-        userIDLabel = UILabel(frame: CGRect(x: 0, y: self.view.frame.height/12, width: self.view.frame.width, height: 60))
-        userIDLabel.text = userID
-        userIDLabel.textAlignment = .center
-        userIDLabel.font = UIFont.systemFont(ofSize: 30)
-        self.view.addSubview(userIDLabel)
+        // re-define the error label
+        errorLabelAppeared = false
+        
         
     }
+    
+    // set direction message
+    func setDirectionMessage(_ code: DirectionCode){
+        // Get the raw string value from the DirectionCode enum that we created at the top of this program.
+        //sendMessage(code.rawValue)
+        
+    }
+    
+    // send message to the websocket
+    func sendMessage(_ message: String){
+        // check if there is a valid player id set
+        guard let playerID = userInput.text else{
+            print("not a valid player ID")
+            return
+        }
+        
+        // prepare server message
+        let message = "\(playerID), \(message)"
+        // send message to the websocket
+        socket?.write(string: message){
+            print("this message was send to the server:", message)
+        }
+        
+    }
+//
+//        // Construct server message and write to socket. ///////////
+//        let message = "\(playerId), \(message)"
+//        socket?.write(string: message) {
+//            // This is a completion block.
+//            // We can write custom code here that will run once the message is sent.
+//            print("⬆️ sent message to server: ", message)
+//        }
+//        ///////////////////////////////////////////////////////////
+//    }
     
     // Web Socket Methods
     func websocketDidConnect(socket: WebSocketClient) {
@@ -128,7 +205,7 @@ class ViewController: UIViewController, WebSocketDelegate, UITextFieldDelegate {
     }
     
     func websocketDidReceiveMessage(socket: WebSocketClient, text: String) {
-        //print("socket recieved message", text)
+        print("socket recieved message", text)
     }
     
     func websocketDidReceiveData(socket: WebSocketClient, data: Data) {
