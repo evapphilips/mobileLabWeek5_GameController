@@ -35,9 +35,46 @@ class ViewController: UIViewController, WebSocketDelegate {
         socket?.delegate = self
         // Connect to the web socket
         socket?.connect()
+        
+        // Set up swipe gestures
+        // swipe right
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(respondToSwipe))
+        swipeRight.direction = UISwipeGestureRecognizer.Direction.right
+        self.view.addGestureRecognizer(swipeRight)
+        // swipe left
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(respondToSwipe))
+        swipeLeft.direction = UISwipeGestureRecognizer.Direction.left
+        self.view.addGestureRecognizer(swipeLeft)
+        // swipe up
+        let swipeUp = UISwipeGestureRecognizer(target: self, action: #selector(respondToSwipe))
+        swipeUp.direction = UISwipeGestureRecognizer.Direction.up
+        self.view.addGestureRecognizer(swipeUp)
+        // swipe down
+        let swipeDown = UISwipeGestureRecognizer(target: self, action: #selector(respondToSwipe))
+        swipeDown.direction = UISwipeGestureRecognizer.Direction.down
+        self.view.addGestureRecognizer(swipeDown)
+        
     }
     
-    // Web Socket Method
+    //when a swipe gesture is detected
+    @objc func respondToSwipe(gesture: UIGestureRecognizer){
+        if let swipeGesture = gesture as? UISwipeGestureRecognizer{
+            switch swipeGesture.direction{
+            case UISwipeGestureRecognizer.Direction.right:  // swipe right
+                print("Swiped right")
+            case UISwipeGestureRecognizer.Direction.left: // swipe left
+                print("Swiped left")
+            case UISwipeGestureRecognizer.Direction.up: // swipe up
+                print("Swiped Up")
+            case UISwipeGestureRecognizer.Direction.down: // swipe down
+                print("Swiped Down")
+            default:
+                break
+            }
+        }
+    }
+    
+    // Web Socket Methods
     func websocketDidConnect(socket: WebSocketClient) {
         print("socket connected")
     }
@@ -47,11 +84,11 @@ class ViewController: UIViewController, WebSocketDelegate {
     }
     
     func websocketDidReceiveMessage(socket: WebSocketClient, text: String) {
-        print("socket recieved message", text)
+        //print("socket recieved message", text)
     }
     
     func websocketDidReceiveData(socket: WebSocketClient, data: Data) {
-        print("socket recieved data", data)
+        //print("socket recieved data", data)
     }
     
 
